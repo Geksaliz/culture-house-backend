@@ -36,7 +36,7 @@ class Event(
     var venue: String? = null,
 
     @OneToMany(mappedBy = "event", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var responsibleUsers: MutableList<User> = mutableListOf(),
+    var responsibleUsers: MutableList<EventResponsibleUser> = mutableListOf(),
 
     @Column(name = "ticket_price")
     var ticketPrice: BigDecimal? = null,
