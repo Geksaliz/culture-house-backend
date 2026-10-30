@@ -3,28 +3,16 @@ package ru.culture.house.controller
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
-import org.springframework.http.MediaType
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.delete
-import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.put
+import ru.culture.house.IntegrationTests
 import ru.culture.house.TestcontainersConfiguration
-import ru.culture.house.persistence.entity.Club
-import ru.culture.house.persistence.repository.ClubRepository
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration::class)
-class ClubControllerIntegrationTest @Autowired constructor(
-    private val mockMvc: MockMvc,
-    private val clubRepository: ClubRepository,
-    private val jdbcTemplate: JdbcTemplate,
-) {
+class ClubControllerIntegrationTest : IntegrationTests() {
 
     @BeforeEach
     fun cleanUp() {
@@ -199,18 +187,9 @@ class ClubControllerIntegrationTest @Autowired constructor(
 
 // ---------- helpers ----------
 
-    private fun saveClub(name: String, address: String? = null): Long =
-        requireNotNull(clubRepository.save(Club(name = name, address = address)).id)
+    private fun postClub(body: String) = postJson("/api/v1/clubs", body)
 
-    private fun postClub(body: String) = mockMvc.post("/api/v1/clubs") {
-        contentType = MediaType.APPLICATION_JSON
-        content = body
-    }
+    private fun putClub(id: Long, body: String) = putJson("/api/v1/clubs/$id", body)
 
-    private fun putClub(id: Long, body: String) = mockMvc.put("/api/v1/clubs/$id") {
-        contentType = MediaType.APPLICATION_JSON
-        content = body
-    }
-
-    private fun deleteClub(id: Long) = mockMvc.delete("/api/v1/clubs/$id")
+    private fun deleteClub(id: Long) = deleteRequest("/api/v1/clubs/$id")
 }
