@@ -6,8 +6,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.web.servlet.get
+import ru.culture.house.persistence.entity.User
 import ru.culture.house.IntegrationTests
-import ru.culture.house.controller.dto.toResponse
 import ru.culture.house.persistence.entity.UserRole
 import ru.culture.house.persistence.repository.UserRepository
 
@@ -172,6 +173,67 @@ class UserControllerIntegrationTest @Autowired constructor(
         postUser(userJson(clubId = clubId)).andExpect { status { isForbidden() } }
 
         assertThat(userRepository.count()).isZero()
+    }
+
+    // ---------- GET /api/v1/users/{id} ----------
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["ADMIN", "EMPLOYEE"])
+    fun `get by id returns club user without credentials`(role: UserRole) {
+        val clubId = saveClub()
+        val user = userRepository.saveAndFlush(
+            User(
+                club = clubRepository.findById(clubId).orElseThrow(),
+                login = "anna",
+                passwordHash = "test-hash",
+                role = role,
+            )
+        )
+
+        mockMvc.get("/api/v1/users/${user.id}").andExpect {
+            status { isOk() }
+            jsonPath("$.id") { value(requireNotNull(user.id)) }
+            jsonPath("$.login") { value("anna") }
+            jsonPath("$.role") { value(role.name) }
+            jsonPath("$.clubId") { value(clubId) }
+            jsonPath("$.isActive") { value(true) }
+            jsonPath("$.createdAt") { exists() }
+            jsonPath("$.password") { doesNotExist() }
+            jsonPath("$.passwordHash") { doesNotExist() }
+        }
+    }
+
+    @Test
+    fun `get by id returns inactive super admin without club`() {
+        val user = userRepository.saveAndFlush(
+            User(login = "root", passwordHash = "test-hash", role = UserRole.SUPER_ADMIN, isActive = false)
+        )
+
+        mockMvc.get("/api/v1/users/${user.id}").andExpect {
+            status { isOk() }
+            jsonPath("$.id") { value(requireNotNull(user.id)) }
+            jsonPath("$.login") { value("root") }
+            jsonPath("$.role") { value("SUPER_ADMIN") }
+            jsonPath("$.clubId") { doesNotExist() }
+            jsonPath("$.isActive") { value(false) }
+            jsonPath("$.passwordHash") { doesNotExist() }
+        }
+    }
+
+    @Test
+    fun `get unknown user returns 404`() {
+        mockMvc.get("/api/v1/users/999999").andExpect {
+            status { isNotFound() }
+            jsonPath("$.status") { value(404) }
+            jsonPath("$.detail") { value("Пользователь с id=999999 не найден") }
+        }
+    }
+
+    @Test
+    fun `get user with invalid id returns 400`() {
+        mockMvc.get("/api/v1/users/not-a-number").andExpect {
+            status { isBadRequest() }
+        }
     }
 
     // ---------- helpers ----------

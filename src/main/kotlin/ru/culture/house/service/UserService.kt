@@ -23,6 +23,12 @@ class UserService(
     private val passwordEncoder: PasswordEncoder,
 ) {
 
+    @Transactional(readOnly = true)
+    fun getById(id: Long): UserResponse =
+        userRepository.findById(id)
+            .orElseThrow { NotFoundException("Пользователь с id=$id не найден") }
+            .toResponse()
+
     /**
      * Дубликат логина ловим на уровне БД (unique constraint), а не проверкой
      * existsByLogin: так нет гонки между проверкой и вставкой. К моменту save
