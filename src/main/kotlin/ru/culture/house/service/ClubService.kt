@@ -1,6 +1,7 @@
 package ru.culture.house.service
 
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ru.culture.house.controller.dto.ClubRequest
@@ -15,6 +16,16 @@ import ru.culture.house.persistence.repository.ClubRepository
 class ClubService(
     private val clubRepository: ClubRepository,
 ) {
+
+    @Transactional(readOnly = true)
+    fun getAll(): List<ClubResponse> =
+        clubRepository.findAll(Sort.by("id")).map { it.toResponse() }
+
+    @Transactional(readOnly = true)
+    fun getById(id: Long): ClubResponse =
+        clubRepository.findById(id)
+            .orElseThrow { NotFoundException("Клуб с id=$id не найден") }
+            .toResponse()
 
     fun create(request: ClubRequest): ClubResponse =
         clubRepository.save(

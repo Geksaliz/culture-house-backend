@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.test.web.servlet.get
 import ru.culture.house.IntegrationTests
 import ru.culture.house.TestcontainersConfiguration
 
@@ -18,6 +19,76 @@ class ClubControllerIntegrationTest : IntegrationTests() {
     fun cleanUp() {
         jdbcTemplate.update("delete from users")
         clubRepository.deleteAll()
+    }
+
+    // ---------- GET /api/v1/clubs ----------
+
+    @Test
+    fun `get all returns empty array when there are no clubs`() {
+        mockMvc.get("/api/v1/clubs").andExpect {
+            status { isOk() }
+            content { json("[]") }
+        }
+    }
+
+    @Test
+    fun `get all returns clubs ordered by id`() {
+        val firstId = saveClub("ДК Центральный", "ул. Чапаева, 20")
+        val secondId = saveClub("ДК Восток")
+
+        mockMvc.get("/api/v1/clubs").andExpect {
+            status { isOk() }
+            jsonPath("$.length()") { value(2) }
+            jsonPath("$[0].id") { value(firstId) }
+            jsonPath("$[0].name") { value("ДК Центральный") }
+            jsonPath("$[0].address") { value("ул. Чапаева, 20") }
+            jsonPath("$[0].createdAt") { exists() }
+            jsonPath("$[1].id") { value(secondId) }
+            jsonPath("$[1].name") { value("ДК Восток") }
+            jsonPath("$[1].address") { doesNotExist() }
+            jsonPath("$[1].createdAt") { exists() }
+        }
+    }
+
+    @Test
+    fun `get by id returns requested club`() {
+        saveClub("Другой клуб")
+        val id = saveClub("ДК Центральный", "ул. Чапаева, 20")
+
+        mockMvc.get("/api/v1/clubs/$id").andExpect {
+            status { isOk() }
+            jsonPath("$.id") { value(id) }
+            jsonPath("$.name") { value("ДК Центральный") }
+            jsonPath("$.address") { value("ул. Чапаева, 20") }
+            jsonPath("$.createdAt") { exists() }
+        }
+    }
+
+    @Test
+    fun `get by id returns club without address`() {
+        val id = saveClub("ДК Восток")
+
+        mockMvc.get("/api/v1/clubs/$id").andExpect {
+            status { isOk() }
+            jsonPath("$.id") { value(id) }
+            jsonPath("$.address") { doesNotExist() }
+        }
+    }
+
+    @Test
+    fun `get unknown club returns 404`() {
+        mockMvc.get("/api/v1/clubs/999999").andExpect {
+            status { isNotFound() }
+            jsonPath("$.status") { value(404) }
+            jsonPath("$.detail") { value("Клуб с id=999999 не найден") }
+        }
+    }
+
+    @Test
+    fun `get with invalid id returns 400`() {
+        mockMvc.get("/api/v1/clubs/not-a-number").andExpect {
+            status { isBadRequest() }
+        }
     }
 
     // ---------- POST /api/clubs ----------

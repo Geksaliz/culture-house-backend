@@ -12,6 +12,12 @@ class ClubController(
     private val clubService: ClubService,
 ) {
 
+    @GetMapping(version = "1")
+    fun getAll(): List<ClubResponse> = clubService.getAll()
+
+    @GetMapping("/{id}", version = "1")
+    fun getById(@PathVariable id: Long): ClubResponse = clubService.getById(id)
+
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@RequestBody request: ClubRequest): ClubResponse =
