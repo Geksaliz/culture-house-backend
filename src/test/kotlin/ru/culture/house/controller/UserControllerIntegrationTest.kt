@@ -236,6 +236,75 @@ class UserControllerIntegrationTest @Autowired constructor(
         }
     }
 
+    @Test
+    fun `get by club returns only its users including inactive without credentials`() {
+        val clubId = saveClub()
+        val club = clubRepository.findById(clubId).orElseThrow()
+        val otherClubId = saveClub("Другой клуб")
+        val otherClub = clubRepository.findById(otherClubId).orElseThrow()
+        val first = userRepository.saveAndFlush(
+            User(club = club, login = "admin", passwordHash = "test-hash", role = UserRole.ADMIN)
+        )
+        val second = userRepository.saveAndFlush(
+            User(
+                club = club, login = "employee", passwordHash = "test-hash",
+                role = UserRole.EMPLOYEE, isActive = false,
+            )
+        )
+        userRepository.saveAndFlush(
+            User(club = otherClub, login = "other", passwordHash = "test-hash", role = UserRole.ADMIN)
+        )
+        userRepository.saveAndFlush(
+            User(login = "root", passwordHash = "test-hash", role = UserRole.SUPER_ADMIN)
+        )
+
+        mockMvc.get("/api/v1/users") { param("clubId", clubId.toString()) }.andExpect {
+            status { isOk() }
+            jsonPath("$.length()") { value(2) }
+            jsonPath("$[0].id") { value(requireNotNull(first.id)) }
+            jsonPath("$[0].login") { value("admin") }
+            jsonPath("$[0].role") { value("ADMIN") }
+            jsonPath("$[0].clubId") { value(clubId) }
+            jsonPath("$[0].isActive") { value(true) }
+            jsonPath("$[0].createdAt") { exists() }
+            jsonPath("$[1].id") { value(requireNotNull(second.id)) }
+            jsonPath("$[1].login") { value("employee") }
+            jsonPath("$[1].clubId") { value(clubId) }
+            jsonPath("$[1].isActive") { value(false) }
+            jsonPath("$[*].password") { isEmpty() }
+            jsonPath("$[*].passwordHash") { isEmpty() }
+        }
+    }
+
+    @Test
+    fun `get users of empty club returns empty array`() {
+        val clubId = saveClub()
+
+        mockMvc.get("/api/v1/users") { param("clubId", clubId.toString()) }.andExpect {
+            status { isOk() }
+            content { json("[]") }
+        }
+    }
+
+    @Test
+    fun `get users of unknown club returns 404`() {
+        mockMvc.get("/api/v1/users") { param("clubId", "999999") }.andExpect {
+            status { isNotFound() }
+            jsonPath("$.status") { value(404) }
+            jsonPath("$.detail") { value("Клуб с id=999999 не найден") }
+        }
+    }
+
+    @Test
+    fun `get users requires valid club id`() {
+        mockMvc.get("/api/v1/users").andExpect {
+            status { isBadRequest() }
+        }
+        mockMvc.get("/api/v1/users") { param("clubId", "not-a-number") }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+
     // ---------- helpers ----------
 
     private fun userRows(): List<Map<String, Any?>> =

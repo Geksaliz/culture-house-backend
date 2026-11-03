@@ -5,4 +5,6 @@ import org.springframework.stereotype.Repository
 import ru.culture.house.persistence.entity.User
 
 @Repository
-interface UserRepository: JpaRepository<User, Long>
+interface UserRepository: JpaRepository<User, Long> {
+    fun findAllByClubIdOrderByIdAsc(clubId: Long): List<User>
+}

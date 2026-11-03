@@ -24,6 +24,15 @@ class UserService(
 ) {
 
     @Transactional(readOnly = true)
+    fun getByClubId(clubId: Long): List<UserResponse> {
+        if (!clubRepository.existsById(clubId)) {
+            throw NotFoundException("Клуб с id=$clubId не найден")
+        }
+        return userRepository.findAllByClubIdOrderByIdAsc(clubId)
+            .map { it.toResponse() }
+    }
+
+    @Transactional(readOnly = true)
     fun getById(id: Long): UserResponse =
         userRepository.findById(id)
             .orElseThrow { NotFoundException("Пользователь с id=$id не найден") }
