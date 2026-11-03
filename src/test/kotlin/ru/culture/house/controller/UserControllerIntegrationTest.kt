@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import ru.culture.house.IntegrationTests
+import ru.culture.house.controller.dto.toResponse
 import ru.culture.house.persistence.entity.UserRole
 import ru.culture.house.persistence.repository.UserRepository
 
@@ -27,6 +28,7 @@ class UserControllerIntegrationTest @Autowired constructor(
             jsonPath("\$.id") { isNumber() }
             jsonPath("\$.login") { value("anna") }
             jsonPath("\$.role") { value(role.name) }
+            jsonPath("\$.isActive") { value(true) }
             jsonPath("\$.clubId") { value(clubId) }
             jsonPath("\$.createdAt") { exists() }
         }
@@ -35,6 +37,7 @@ class UserControllerIntegrationTest @Autowired constructor(
         assertThat(row["login"]).isEqualTo("anna")
         assertThat(row["role"]).isEqualTo(role.name)
         assertThat(row["club_id"]).isEqualTo(clubId)
+        assertThat(row["is_active"]).isEqualTo(true)
     }
 
     @Test
@@ -42,12 +45,14 @@ class UserControllerIntegrationTest @Autowired constructor(
         postUser(userJson(login = "root", role = "SUPER_ADMIN")).andExpect {
             status { isCreated() }
             jsonPath("\$.role") { value("SUPER_ADMIN") }
+            jsonPath("\$.isActive") { value(true) }
             jsonPath("\$.clubId") { doesNotExist() }
         }
 
         val row = userRows().single()
         assertThat(row["role"]).isEqualTo("SUPER_ADMIN")
         assertThat(row["club_id"]).isNull()
+        assertThat(row["is_active"]).isEqualTo(true)
     }
 
     @Test
@@ -172,7 +177,7 @@ class UserControllerIntegrationTest @Autowired constructor(
     // ---------- helpers ----------
 
     private fun userRows(): List<Map<String, Any?>> =
-        jdbcTemplate.queryForList("select login, role, club_id, password_hash from users order by id")
+        jdbcTemplate.queryForList("select login, role, club_id, password_hash, is_active from users order by id")
 
     private fun userJson(
         login: String = "anna",

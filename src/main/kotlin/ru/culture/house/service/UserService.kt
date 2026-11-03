@@ -36,6 +36,7 @@ class UserService(
             login = request.login.trim(),
             passwordHash = requireNotNull(passwordEncoder.encode(request.password)),
             role = request.role,
+            isActive = true,
         )
         try {
             userRepository.saveAndFlush(user)

@@ -26,6 +26,9 @@ class User(
     @Column(nullable = false, length = 20)
     var role: UserRole,
 
+    @Column(name = "is_active", nullable = false)
+    var isActive: Boolean = true,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
 )
