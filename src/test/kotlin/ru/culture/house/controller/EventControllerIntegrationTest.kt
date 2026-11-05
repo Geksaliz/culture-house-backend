@@ -37,6 +37,12 @@ class EventControllerIntegrationTest : IntegrationTests() {
                 jsonPath("$.disabilityAttendance[0].count") { value(2) }
             }
         }
+        assertThat(jdbcTemplate.queryForList(
+            "select category_id, count from event_attendance where event_id=?", id,
+        )).containsExactly(mapOf<String, Any>("category_id" to 1L, "count" to 10))
+        assertThat(jdbcTemplate.queryForList(
+            "select category_id, count from event_disability_attendance where event_id=?", id,
+        )).containsExactly(mapOf<String, Any>("category_id" to 1L, "count" to 2))
         putJson("/api/v1/events/$id", """{
             "name":"Концерт","eventDate":"2026-12-01","status":"COMPLETED",
             "attendance":[{"categoryId":2,"count":5}]
@@ -49,6 +55,12 @@ class EventControllerIntegrationTest : IntegrationTests() {
         }
         assertThat(jdbcTemplate.queryForObject("select count(*) from event_attendance where event_id=?", Long::class.java, id))
             .isEqualTo(1L)
+        assertThat(jdbcTemplate.queryForList(
+            "select category_id, count from event_attendance where event_id=?", id,
+        )).containsExactly(mapOf<String, Any>("category_id" to 2L, "count" to 5))
+        assertThat(jdbcTemplate.queryForList(
+            "select category_id, count from event_disability_attendance where event_id=?", id,
+        )).isEmpty()
         deleteRequest("/api/v1/events/$id").andExpect { status { isNoContent() } }
         mockMvc.get("/api/v1/events/$id").andExpect { status { isNotFound() } }
         assertThat(jdbcTemplate.queryForObject("select count(*) from event_attendance where event_id=?", Long::class.java, id))
@@ -63,6 +75,12 @@ class EventControllerIntegrationTest : IntegrationTests() {
             "attendance":[{"categoryId":3,"count":7}],
             "disabilityAttendance":[{"categoryId":2,"count":3}]
         }""")
+        assertThat(jdbcTemplate.queryForList(
+            "select category_id, count from event_attendance where event_id=?", id,
+        )).containsExactly(mapOf<String, Any>("category_id" to 3L, "count" to 7))
+        assertThat(jdbcTemplate.queryForList(
+            "select category_id, count from event_disability_attendance where event_id=?", id,
+        )).containsExactly(mapOf<String, Any>("category_id" to 2L, "count" to 3))
         mockMvc.get("/api/v1/events/$id").andExpect {
             status { isOk() }
             jsonPath("$.totalVisitors") { value(7) }
