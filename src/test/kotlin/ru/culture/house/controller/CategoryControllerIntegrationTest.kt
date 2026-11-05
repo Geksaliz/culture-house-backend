@@ -12,9 +12,9 @@ class CategoryControllerIntegrationTest : IntegrationTests() {
             content {
                 json(
                     """[
-                        {"name":"Дети","ageGroup":"CHILD"},
-                        {"name":"Подростки","ageGroup":"TEEN"},
-                        {"name":"Взрослые","ageGroup":"ADULT"}
+                        {"id":1,"name":"Дети","ageGroup":"CHILD"},
+                        {"id":2,"name":"Подростки","ageGroup":"TEEN"},
+                        {"id":3,"name":"Взрослые","ageGroup":"ADULT"}
                     ]""",
                     org.springframework.test.json.JsonCompareMode.STRICT,
                 )
@@ -29,11 +29,11 @@ class CategoryControllerIntegrationTest : IntegrationTests() {
             content {
                 json(
                     """[
-                        {"name":"Инвалид 1 группы","discountPercent":100},
-                        {"name":"Инвалид 2-3 группы","discountPercent":50},
-                        {"name":"Многодетные","discountPercent":50},
-                        {"name":"Ребёнок-инвалид","discountPercent":100},
-                        {"name":"СВО","discountPercent":100}
+                        {"id":1,"name":"Инвалид 1 группы","discountPercent":100},
+                        {"id":2,"name":"Инвалид 2-3 группы","discountPercent":50},
+                        {"id":3,"name":"Многодетные","discountPercent":50},
+                        {"id":4,"name":"Ребёнок-инвалид","discountPercent":100},
+                        {"id":5,"name":"СВО","discountPercent":100}
                     ]""",
                     org.springframework.test.json.JsonCompareMode.STRICT,
                 )

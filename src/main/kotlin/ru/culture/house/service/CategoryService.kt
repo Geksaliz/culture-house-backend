@@ -16,12 +16,12 @@ class CategoryService(
     @Transactional(readOnly = true)
     fun getVisitorCategories(): List<VisitorCategoryResponse> =
         visitorCategoryRepository.findAll(Sort.by("id")).map {
-            VisitorCategoryResponse(it.name, it.ageGroup)
+            VisitorCategoryResponse(requireNotNull(it.id), it.name, it.ageGroup)
         }
 
     @Transactional(readOnly = true)
     fun getDisabilityCategories(): List<DisabilityCategoryResponse> =
         disabilityCategoryRepository.findAll(Sort.by("id")).map {
-            DisabilityCategoryResponse(it.name, it.discountPercent)
+            DisabilityCategoryResponse(requireNotNull(it.id), it.name, it.discountPercent)
         }
 }
