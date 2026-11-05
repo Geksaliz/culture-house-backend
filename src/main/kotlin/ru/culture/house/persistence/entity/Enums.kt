@@ -4,6 +4,8 @@ enum class UserRole { SUPER_ADMIN, ADMIN, EMPLOYEE }
 
 enum class EventType { PAID, FREE }
 
+enum class EventStatus { PLANNED, COMPLETED }
+
 enum class AgeGroup { CHILD, TEEN, ADULT }
 
 enum class TicketMovementType { REPLENISHMENT, SALE, ADJUSTMENT }

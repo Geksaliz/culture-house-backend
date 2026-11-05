@@ -33,6 +33,10 @@ class Event(
     @Column(nullable = false, length = 10)
     var type: EventType,
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var status: EventStatus = EventStatus.PLANNED,
+
     var venue: String? = null,
 
     @OneToMany(mappedBy = "event", cascade = [CascadeType.ALL], orphanRemoval = true)
